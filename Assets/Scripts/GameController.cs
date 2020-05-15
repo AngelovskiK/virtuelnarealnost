@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -24,6 +25,11 @@ public class GameController : MonoBehaviour
     private Status status = Status.StartingMenu;
     public Text notificationText;
     public float notificationCounter = -1;
+
+    private AudioSource cameraAudioSource;
+    public List<AudioClip> BGMusicAudioClips;
+    private int currentBGMusicAudioClipIndx;
+    private static System.Random rng = new System.Random();
 
     internal void Notify(string m, float duration = 3)
     {
@@ -58,6 +64,9 @@ public class GameController : MonoBehaviour
             }
         }
         DontDestroyOnLoad(this);
+        cameraAudioSource = Camera.main.gameObject.GetComponent<AudioSource>();
+        BGMusicAudioClips = BGMusicAudioClips.OrderBy(a => rng.Next()).ToList();
+        currentBGMusicAudioClipIndx = 0;
     }
 
     public void StartGame()
@@ -129,6 +138,13 @@ public class GameController : MonoBehaviour
             {
                 notificationText.text = "";
             }
+        }
+        if (!cameraAudioSource.isPlaying)
+        {
+            currentBGMusicAudioClipIndx++;
+            currentBGMusicAudioClipIndx %= BGMusicAudioClips.Count;
+            cameraAudioSource.clip = BGMusicAudioClips[currentBGMusicAudioClipIndx];
+            cameraAudioSource.Play();
         }
     }
 }

@@ -19,13 +19,20 @@ public class DoorController : MonoBehaviour
     private GameController gameController;
     private List<ISignalCarrier> inputs;
     private float counter = -1;
-    
+
+    public AudioClip openClip;
+    public AudioClip closeClip;
+
+    private AudioSource audioSource;
+
     void Start()
     {
         inputs = inputTraces.Select(it => (ISignalCarrier)it).ToList();
         animator = GetComponent<Animator>();
         animator.SetBool("isOpen", isOpen);
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
+        audioSource = GetComponent<AudioSource>();
+
     }
 
     public void Interact()
@@ -38,7 +45,14 @@ public class DoorController : MonoBehaviour
             gameController.Notify("Заклучено!");
             return;
         }
+        bool prev = isOpen;
         isOpen = !isOpen;
+        if (!prev && isOpen)
+            audioSource.clip = openClip;
+        else if (prev && !isOpen)
+            audioSource.clip = closeClip;
+        if (prev != isOpen)
+            audioSource.Play();
         animator.SetBool("isOpen", isOpen);
     }
 
@@ -48,6 +62,8 @@ public class DoorController : MonoBehaviour
         if (activationNeeded == 0)
             return;
         float inputActivation = inputs.Select(t => t.GetSignal()).Sum();
+
+        bool prev = isOpen;
         if (switchBehaivour)
         {
             if (counter > 0)
@@ -62,6 +78,12 @@ public class DoorController : MonoBehaviour
         {
             isOpen = inputActivation >= activationNeeded;
         }
+        if (!prev && isOpen)
+            audioSource.clip = openClip;
+        else if (prev && !isOpen)
+            audioSource.clip = closeClip;
+        if (prev != isOpen)
+            audioSource.Play();
         animator.SetBool("isOpen", isOpen);
     }
 
@@ -73,7 +95,7 @@ public class DoorController : MonoBehaviour
 
         if (!isLocked)
         {
-            gameController.Notify("Ковчегот не е заклучен");
+            gameController.Notify("Вратата не е заклучена");
             return;
         }
 

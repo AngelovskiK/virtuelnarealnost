@@ -13,19 +13,24 @@ public class TraceController : MonoBehaviour, ISignalCarrier
     public Color activeColor;
     public Color inactiveColor;
 
+    private AudioSource audioSource;
     private Renderer myRenderer;
     // Start is called before the first frame update
     void Start()
     {
         myRenderer = GetComponent<Renderer>();
         inputs = inputTraces.Select(it => (ISignalCarrier)it).ToList();
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        float inputActivation = inputs.Select(t => t.GetSignal()).Sum();       
+        float inputActivation = inputs.Select(t => t.GetSignal()).Sum();
+        bool prev = isActive;
         isActive = inputActivation >= needed;
+        if (!prev && isActive)
+            audioSource.Play();
         myRenderer.material.color = isActive ? activeColor : inactiveColor;
     }
 

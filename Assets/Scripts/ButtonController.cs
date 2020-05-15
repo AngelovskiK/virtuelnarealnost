@@ -12,15 +12,21 @@ public class ButtonController : MonoBehaviour, ISignalCarrier
     private Rigidbody myRigidBody;
     public bool hasContact = false;
 
+    private AudioSource audioSource;
+
     // Start is called before the first frame update
     void Start()
     {
         myRigidBody = GetComponent<Rigidbody>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     private void Update()
     {
+        bool prev = hasContact;
         hasContact = weightOnMe >= requiredWeight;
+        if (!prev && hasContact)
+            audioSource.Play();
     }
 
     private void FixedUpdate()

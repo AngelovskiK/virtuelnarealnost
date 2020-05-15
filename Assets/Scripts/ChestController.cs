@@ -10,11 +10,17 @@ public class ChestController : MonoBehaviour
     public int keyId = 0;
     private Animator animator;
     private GameController gameController;
+
+    public AudioClip lockedClip;
+    public AudioClip unlockClip;
+    public AudioClip openClip;
+    private AudioSource audioSource;
     void Start()
     {
         animator = GetComponent<Animator>();
         animator.SetBool("isOpen", isOpen);
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     public void Interact()
@@ -25,9 +31,13 @@ public class ChestController : MonoBehaviour
         if (isLocked && !isOpen)
         {
             gameController.Notify("Заклучено!");
+            audioSource.clip = lockedClip;
+            audioSource.Play();
             return;
         }
         isOpen = !isOpen;
+        audioSource.clip = openClip;
+        audioSource.Play();
         animator.SetBool("isOpen", isOpen);
     }
 
@@ -48,8 +58,14 @@ public class ChestController : MonoBehaviour
         {
             isLocked = false;
             gameController.Notify("Отклучено!");
+            audioSource.clip = unlockClip;
+            audioSource.Play();
         }
         else
+        {
             gameController.Notify("Немате соодветен клуч!");
+            audioSource.clip = lockedClip;
+            audioSource.Play();
+        }
     }
 }
