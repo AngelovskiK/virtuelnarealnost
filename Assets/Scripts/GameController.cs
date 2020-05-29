@@ -13,7 +13,8 @@ public class GameController : MonoBehaviour
         StartingMenu = 0,
         HelpMenu,
         Ingame,
-        Paused
+        Paused,
+        GameOver
     }
 
     public PlayerController playerControllerScript;
@@ -24,12 +25,24 @@ public class GameController : MonoBehaviour
     public GameObject ingameCanvas;
     private Status status = Status.StartingMenu;
     public Text notificationText;
+    public Text levelTimerText;
+    public Text totalTimerText;
     public float notificationCounter = -1;
+    public int noLevels;
+    public int currentLevel = 1;
 
     private AudioSource cameraAudioSource;
     public List<AudioClip> BGMusicAudioClips;
     private int currentBGMusicAudioClipIndx;
     private static System.Random rng = new System.Random();
+    private float currentLevelTime;
+    private DateTime currentLevelStartTime;
+    private float totalRunTime;
+    private DateTime totalRunStartTime;
+
+    private float[] levelTimes;
+
+    private float endLevelHelpTimer = -1;
 
     internal void Notify(string m, float duration = 3)
     {
@@ -67,6 +80,11 @@ public class GameController : MonoBehaviour
         cameraAudioSource = Camera.main.gameObject.GetComponent<AudioSource>();
         BGMusicAudioClips = BGMusicAudioClips.OrderBy(a => rng.Next()).ToList();
         currentBGMusicAudioClipIndx = 0;
+
+        totalRunStartTime = DateTime.Now;
+        currentLevelStartTime = DateTime.Now;
+
+        levelTimes = new float[noLevels];
     }
 
     public void StartGame()
@@ -77,6 +95,32 @@ public class GameController : MonoBehaviour
         pauseCanvas.SetActive(false);
         ingameCanvas.SetActive(true);
         status = Status.Ingame;
+    }
+
+    public void EndLevel()
+    {
+        if (endLevelHelpTimer > 0)
+            return;
+
+        if (currentLevel == noLevels)
+        {
+            // game over
+            playerControllerScript.enabled = false;
+            startCanvas.SetActive(false);
+            helpCanvas.SetActive(false);
+            pauseCanvas.SetActive(false);
+            ingameCanvas.SetActive(false);
+            status = Status.GameOver;
+        }
+        else
+        {
+            levelTimes[currentLevel - 1] = currentLevelTime;
+        }
+        currentLevel++;
+        currentLevelStartTime = DateTime.Now;
+        currentLevelTime = 0f;
+
+        endLevelHelpTimer = 1f;
     }
 
     public void RestartGame()
@@ -130,7 +174,20 @@ public class GameController : MonoBehaviour
     void Update()
     {
         if (status == Status.Ingame)
+        {
             canvasesRotator.eulerAngles = new Vector3(0, Camera.main.transform.eulerAngles.y, 0);
+            if (endLevelHelpTimer > 0)
+                endLevelHelpTimer -= Time.deltaTime;
+        }
+        if (status == Status.Ingame || status == Status.Paused)
+        {
+            totalRunTime += Time.deltaTime;
+            currentLevelTime += Time.deltaTime;
+            int runTimeInSeconds = (int)totalRunTime;
+            int levelTimeInSeconds = (int)currentLevelTime;
+            levelTimerText.text = string.Format("{0}:{1:D2}", (levelTimeInSeconds / 60), (levelTimeInSeconds % 60));
+            totalTimerText.text = string.Format("Total: {0}:{1:D2}", (runTimeInSeconds / 60), (runTimeInSeconds % 60));
+        }
         if (notificationCounter > 0)
         {
             notificationCounter -= Time.deltaTime;
@@ -147,4 +204,5 @@ public class GameController : MonoBehaviour
             cameraAudioSource.Play();
         }
     }
+
 }

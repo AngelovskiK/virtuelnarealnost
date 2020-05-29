@@ -78,4 +78,14 @@ public class PlayerController : MonoBehaviour
             myRigidbody.velocity = v3 * Time.deltaTime * moveSpeed;
         } 
     }
+
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("LevelEnd"))
+        {
+            Destroy(other.gameObject);
+            gameController.EndLevel();
+        }
+    }
 }
